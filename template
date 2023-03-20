@@ -1,0 +1,55 @@
+import pandas as pd
+import plotly.io as pio
+import ipywidgets as widgets
+import matplotlib.pyplot as plt
+import plotly.express as px
+import plotly.graph_objs as go
+from plotly.subplots import make_subplots
+
+# Read the CSV file"your .csv file path goes here"
+df = pd.read_csv('/first_occurrence.csv')
+
+
+df['Datetime'] = pd.to_datetime(df.Datetime)
+
+# Filter the DataFrame to only include rows with timestamps between 2010 and 2032
+task3_df_2010_to_2032 = df[(df['Datetime'].dt.year >= 2010) & (df['Datetime'].dt.year <= 2032)]
+
+# Count the number of posts per month and category
+monthly_counts = task3_df_2010_to_2032.groupby(['Category', pd.Grouper(key='Datetime', freq='M')])['Content ID'].count().reset_index(name='count')
+
+
+# create subplots with shared x-axis
+fig = make_subplots(rows=2, cols=1, shared_xaxes=True)
+
+# loop through unique categories and add a trace for each one
+for i, category in enumerate(monthly_counts['Category'].unique()):
+    df_cat = monthly_counts[monthly_counts['Category'] == category]
+    fig.add_trace(go.Bar(x=df_cat['Datetime'], y=df_cat['count'], name=category, visible=i==0, 
+                 texttemplate='%{x|%Y-%m}', textposition='inside', insidetextanchor='start'), row=1, col=1)
+
+# create dropdown menu to select the category
+dropdown = [{'label': category, 'method': 'update', 
+             'args': [{'visible': [j==i for j in range(len(monthly_counts['Category'].unique()))]},
+                      {'title': f'Posts per Category: {category}'}]} 
+            for i, category in enumerate(monthly_counts['Category'].unique())]
+
+# set updatemenus and showlegend
+updatemenus = [{'active': 0, 'buttons': dropdown}]
+fig.update_layout(showlegend=False, updatemenus=updatemenus, height=2500)
+
+# set x-axis label and y-axis label
+fig.update_xaxes(title_text='Month', row=2, col=1)
+fig.update_yaxes(title_text='Post Count', row=1, col=1)
+
+# set figure title
+fig.update_layout(title={'text': f'Posts per Category: {monthly_counts.Category.unique()[0]}',
+                         'x': 0.5,
+                         'xanchor': 'center',
+                         'font': {'size': 24}})
+
+#save the snippet as html file
+pio.write_html(fig, file='chart2.html', auto_open=False)
+
+# show the figure
+fig.show()
