@@ -45,7 +45,7 @@ fig.update_layout(title={'text': f'Posts per Category: {monthly_counts.Category.
                          'xanchor': 'center',
                          'font': {'size': 24}})
 
-#save the snippet as html file
+# save the snippet as html file
 pio.write_html(fig, file='chart2.html', auto_open=False)
 
 # show the figure
